@@ -4,70 +4,101 @@ output:
   html_document: 
     keep_md: yes
 ---
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+
 
 ## Loading and preprocessing the data
 
 First we initialize the workspace 
 
-```{r init, results="hide"}  
+
+```r
 # Code for reading in the dataset and/or processing the data
 # load libraries
 rm(list=ls())
 library(dplyr)
+```
+
+```
+## 
+## Attaching package: 'dplyr'
+```
+
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
 library(tidyr)
 ```
+
+```
+## Warning: package 'tidyr' was built under R version 4.0.4
+```
 Next, load the csv source file into a dataframe
-```{r load_source}
+
+```r
 x_activity <- read.csv("Activity/Activity.csv", header = TRUE, col.names = c("steps", "date", "interval"))
 x_activity_daily <- x_activity %>%
     group_by(date)  %>%
     summarise(dailySteps = sum(steps))
-
 ```
 
 ## What is mean total number of steps taken per day?
 Histogram of daily steps
-```{r daily_steps_hist1}  
+
+```r
 hist(x_activity_daily$dailySteps, breaks = 25, 
      main = "Frequency of Steps per Day",      xlab = "Steps Per Day")
 ```
 
+![](PA1_template_files/figure-html/daily_steps_hist1-1.png)<!-- -->
+
 #  Mean and median number of steps taken each day
-```{r mean_median_1 }  
+
+```r
 x_activity_mean <- mean(x_activity_daily$dailySteps, na.rm = TRUE)
 x_activity_median <- median(x_activity_daily$dailySteps, na.rm = TRUE)
 ```
-The mean number of daily steps is `r x_activity_mean`.  The median number of daily steps is `x_activity_median`.
+The mean number of daily steps is 1.0766189\times 10^{4}.  The median number of daily steps is `x_activity_median`.
 
 ## What is the average daily activity pattern?
 
 #Time series plot of the average number of steps taken
 
 
-```{r time_plot_avg_steps_1}  
+
+```r
 x_activity_int <- x_activity %>%
   group_by(interval)  %>%
   summarise(IntSteps = sum(steps, na.rm = TRUE), MeanSteps = mean(steps, na.rm = TRUE))
 
 plot(x_activity_int$interval, x_activity_int$MeanSteps, type="l", main = "Average Steps by Time Interval")
-
 ```
+
+![](PA1_template_files/figure-html/time_plot_avg_steps_1-1.png)<!-- -->
 
 #The 5-minute interval that, on average, contains the maximum number of steps
 
-```{r max_steps_interval_1}  
+
+```r
 max_int <- x_activity_int[which.max(x_activity_int$MeanSteps), 1]
 ```
-Interval  `r max_int` contains the maximum number of steps.
+Interval  835 contains the maximum number of steps.
 
 
 ## Imputing missing values
 The strategy for imputing missing values is to fill missing values with the mean for that particular time interval.  In the same loop observations are also coded as "weekend" or "weekday"
 
-```{r impute_missing_values}  
+
+```r
 #
 x_activity_filled <- left_join(x_activity, x_activity_int, by= "interval")
 
@@ -81,11 +112,11 @@ while (i <= length(x_activity_filled$steps)) {
   i <- i + 1
 }
 x_activity_filled <- mutate(x_activity_filled, dtype = ifelse(weekdays(as.Date(date)) == "Saturday" | weekdays(as.Date(date)) == "Sunday", "weekend", "weekday"))
-
 ```
  
 #Histogram of the total number of steps taken each day after missing values are imputed
-```{r total_steps_hist_2}
+
+```r
 x_activity_daily_filled <- x_activity_filled %>%
   group_by(date)  %>%
   summarise(dailySteps = sum(steps))
@@ -93,8 +124,11 @@ x_activity_daily_filled <- x_activity_filled %>%
 hist(x_activity_daily_filled$dailySteps, breaks = 25, 
      main = "Frequency of Steps per Day",      xlab = "Steps Per Day")
 ```
+
+![](PA1_template_files/figure-html/total_steps_hist_2-1.png)<!-- -->
 #  Mean and median number of steps taken each day
-```{r mean_median_steps2}  
+
+```r
 x_activity_mean_filled <- mean(x_activity_daily_filled$dailySteps, na.rm = TRUE)
 x_activity_median_filled <- median(x_activity_daily_filled$dailySteps, na.rm = TRUE)
 ```
@@ -105,7 +139,8 @@ x_activity_median_filled <- median(x_activity_daily_filled$dailySteps, na.rm = T
   
 #Panel plot comparing the average number of steps taken per 5-minute interval across weekdays
 # and weekends
-```{r weekday_v_weekend_steps_plot}
+
+```r
 x_activity_int_filled_weekday <- x_activity_filled %>%
   filter(dtype == 'weekday')  %>%
   group_by(interval)  %>%
@@ -121,8 +156,9 @@ x_activity_int_filled_weekend <- x_activity_filled %>%
   plot(x_activity_int_filled_weekday$interval, x_activity_int$MeanSteps, type="l", main = "Mean Steps by Time Interval - Weekdays",      xlab = "Time Interval", ylab = "Mean Steps")
 
   plot(x_activity_int_filled_weekend$interval, x_activity_int$MeanSteps, type="l", main = "Mean Steps by Time Interval - Weekends",      xlab = "Time Interval", ylab = "Mean Steps")
-  
 ```
+
+![](PA1_template_files/figure-html/weekday_v_weekend_steps_plot-1.png)<!-- -->
 
 
 
